@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
-use App\Models\Mahasiswa;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use App\Models\Kelas;
-
+use App\Models\Mahasiswa;
 
 class MahasiswaController extends Controller
 {
@@ -41,18 +40,17 @@ class MahasiswaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'Nim' => 'required',
-            'Nama' => 'required',
-            'Kelas' => 'required',
-            'Jurusan' => 'required',
-            'Email' => 'required',
-            'Alamat' => 'required',
-            'TL' => 'required',
+        $mahasiswa = Mahasiswa::create(
+            [
+                'nim' => $request->Nim,
+                'nama' => $request->Nama,
+                'kelas_id' => $request->Kelas,
+                'jurusan' => $request->Jurusan,
+                'email' => $request->Email,
+                'alamat' => $request->Alamat,
+                'tl' => $request->tl,
             ]);
-
-            Mahasiswa::create($request->all());
-            return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa Berhasil Ditambahkan');
+        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa Berhasil Ditambahkan');
     }
 
     /**
@@ -63,7 +61,7 @@ class MahasiswaController extends Controller
      */
     public function show($Nim)
     {
-        $Mahasiswa = Mahasiswa::where('nim',$Nim)->first();
+        $Mahasiswa = Mahasiswa::where('nim',$Nim)->with('kelas')->first();
         return view('mahasiswa.detail', compact('Mahasiswa'));
     }
 
@@ -75,8 +73,9 @@ class MahasiswaController extends Controller
      */
     public function edit($Nim)
     {
-        $Mahasiswa = DB::table('mahasiswa')->where('nim', $Nim)->first();;
-        return view('mahasiswa.edit', compact('Mahasiswa'));
+        $Mahasiswa = Mahasiswa::where('nim',$Nim)->with('kelas')->first();
+        $kelas = Kelas::all();
+        return view('mahasiswa.edit', compact('Mahasiswa','kelas'));
     }
 
     /**
@@ -88,21 +87,20 @@ class MahasiswaController extends Controller
      */
     public function update(Request $request, $Nim)
     {
-        $request->validate([
-            'Nim' => 'required',
-            'Nama' => 'required',
-            'Kelas' => 'required',
-            'Jurusan' => 'required',
-            'Email' => 'required',
-            'Alamat' => 'required',
-            'TL' => 'required',
+        // dd($request);
+        $Mahasiswa = Mahasiswa::where('nim',$Nim)->first();
+        $Mahasiswa->update(
+            [
+                'nim' => $request->Nim,
+                'nama' => $request->Nama,
+                'kelas_id' => $request->Kelas,
+                'jurusan' => $request->Jurusan,
+                'email' => $request->Email,
+                'alamat' => $request->Alamat,
+                'tl' => $request->tl,
             ]);
-
-            Mahasiswa::where('nim', $Nim)->first()->update($request->all());
-
-            return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa Berhasil Diupdate');
+        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa Berhasil Diubah');
     }
-
     /**
      * Remove the specified resource from storage.
      *
@@ -111,9 +109,16 @@ class MahasiswaController extends Controller
      */
     public function destroy($Nim)
     {
-        Mahasiswa::find($Nim)->delete();
-        return redirect()->route('mahasiswa.index')
-        -> with('success', 'Mahasiswa Berhasil Dihapus');
+        // dd($Nim);
+        $Mahasiswa = Mahasiswa::where('nim',$Nim)->first();
+        $Mahasiswa->delete();
+        return redirect()->route('mahasiswa.index')-> with('success', 'Mahasiswa Berhasil Dihapus');
+    }
+
+    public function search(Request $request)
+    {
+        $mahasiswa = Mahasiswa::where('nama', 'like', '%' . $request->search . '%')->with('kelas')->paginate(3);
+        return view('mahasiswa.index', compact('mahasiswa'));
     }
 
 }

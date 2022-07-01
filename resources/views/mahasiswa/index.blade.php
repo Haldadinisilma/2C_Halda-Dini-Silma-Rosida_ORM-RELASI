@@ -10,7 +10,7 @@
 </div>
 <div class="row">
         <div class="col-md-6 mt-5">
-            <form action="/search">
+            <form action="{{ url('mahasiswa-search')}}">
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" placeholder="Search..." name="search" value="{{ request('search') }}">
                     <button class="btn btn-primary" type="submit">Search</button>
